@@ -66,7 +66,7 @@ cfg_os_poll! {
 #[cfg(target_os = "wasi")]
 cfg_os_poll! {
     mod wasi;
-    pub(crate) use self::wasi::*;
+    pub use self::wasi::*;
 }
 
 cfg_not_os_poll! {

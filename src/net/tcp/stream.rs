@@ -1,6 +1,8 @@
 use std::fmt;
 use std::io::{self, IoSlice, IoSliceMut, Read, Write};
-use std::net::{self, Shutdown, SocketAddr};
+#[cfg(not(feature = "wasmedge"))]
+use std::net;
+use std::net::{Shutdown, SocketAddr};
 #[cfg(unix)]
 use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd, RawFd};
 #[cfg(target_os = "wasi")]
@@ -46,7 +48,10 @@ use crate::{event, Interest, Registry, Token};
 /// # }
 /// ```
 pub struct TcpStream {
+    #[cfg(not(feature = "wasmedge"))]
     inner: IoSource<net::TcpStream>,
+    #[cfg(feature = "wasmedge")]
+    inner: IoSource<wasmedge_wasi_socket::TcpStream>,
 }
 
 impl TcpStream {
@@ -91,6 +96,15 @@ impl TcpStream {
         Ok(stream)
     }
 
+    /// connect wasi
+    #[cfg(all(target_os = "wasi", feature = "wasmedge"))]
+    pub fn connect(addr: SocketAddr) -> io::Result<TcpStream> {
+        let inner = wasmedge_wasi_socket::TcpStream::connect(addr)?;
+        Ok(TcpStream {
+            inner: IoSource::new(inner),
+        })
+    }
+
     /// Creates a new `TcpStream` from a standard `net::TcpStream`.
     ///
     /// This function is intended to be used to wrap a TCP stream from the
@@ -103,7 +117,16 @@ impl TcpStream {
     /// The TCP stream here will not have `connect` called on it, so it
     /// should already be connected via some other means (be it manually, or
     /// the standard library).
+    #[cfg(not(feature = "wasmedge"))]
     pub fn from_std(stream: net::TcpStream) -> TcpStream {
+        TcpStream {
+            inner: IoSource::new(stream),
+        }
+    }
+
+    /// from std wasi
+    #[cfg(feature = "wasmedge")]
+    pub fn from_std(stream: wasmedge_wasi_socket::TcpStream) -> TcpStream {
         TcpStream {
             inner: IoSource::new(stream),
         }
@@ -142,7 +165,10 @@ impl TcpStream {
     /// by receiving an (writable) event. Trying to set `nodelay` on an
     /// unconnected `TcpStream` is unspecified behavior.
     pub fn set_nodelay(&self, nodelay: bool) -> io::Result<()> {
-        self.inner.set_nodelay(nodelay)
+        #[cfg(not(feature = "wasmedge"))]
+        return self.inner.set_nodelay(nodelay);
+        #[cfg(feature = "wasmedge")]
+        Ok(())
     }
 
     /// Gets the value of the `TCP_NODELAY` option on this socket.
@@ -157,7 +183,10 @@ impl TcpStream {
     /// by receiving an (writable) event. Trying to get `nodelay` on an
     /// unconnected `TcpStream` is unspecified behavior.
     pub fn nodelay(&self) -> io::Result<bool> {
-        self.inner.nodelay()
+        #[cfg(not(feature = "wasmedge"))]
+        return self.inner.nodelay();
+        #[cfg(feature = "wasmedge")]
+        Ok(true)
     }
 
     /// Sets the value for the `IP_TTL` option on this socket.
@@ -171,7 +200,10 @@ impl TcpStream {
     /// by receiving an (writable) event. Trying to set `ttl` on an
     /// unconnected `TcpStream` is unspecified behavior.
     pub fn set_ttl(&self, ttl: u32) -> io::Result<()> {
-        self.inner.set_ttl(ttl)
+        #[cfg(not(feature = "wasmedge"))]
+        return self.inner.set_ttl(ttl);
+        #[cfg(feature = "wasmedge")]
+        Ok(())
     }
 
     /// Gets the value of the `IP_TTL` option for this socket.
@@ -186,7 +218,10 @@ impl TcpStream {
     ///
     /// [link]: #method.set_ttl
     pub fn ttl(&self) -> io::Result<u32> {
-        self.inner.ttl()
+        #[cfg(not(feature = "wasmedge"))]
+        return self.inner.ttl();
+        #[cfg(feature = "wasmedge")]
+        Ok(0)
     }
 
     /// Get the value of the `SO_ERROR` option on this socket.
@@ -195,7 +230,10 @@ impl TcpStream {
     /// the field in the process. This can be useful for checking errors between
     /// calls.
     pub fn take_error(&self) -> io::Result<Option<io::Error>> {
-        self.inner.take_error()
+        #[cfg(not(feature = "wasmedge"))]
+        return self.inner.take_error();
+        #[cfg(feature = "wasmedge")]
+        Ok(None)
     }
 
     /// Receives data on the socket from the remote address to which it is
@@ -205,7 +243,10 @@ impl TcpStream {
     /// Successive calls return the same data. This is accomplished by passing
     /// `MSG_PEEK` as a flag to the underlying recv system call.
     pub fn peek(&self, buf: &mut [u8]) -> io::Result<usize> {
-        self.inner.peek(buf)
+        #[cfg(not(feature = "wasmedge"))]
+        return self.inner.peek(buf);
+        #[cfg(feature = "wasmedge")]
+        Ok(0)
     }
 
     /// Execute an I/O operation ensuring that the socket receives more events

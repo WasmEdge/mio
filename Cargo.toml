@@ -29,7 +29,7 @@ include       = [
 # For documentation of features see the `mio::features` module.
 [features]
 # By default Mio only provides a shell implementation.
-default = []
+default = ["wasmedge", "os-poll", "net"]
 
 # Enables the `Poll` and `Registry` types.
 os-poll = []
@@ -41,6 +41,8 @@ os-ext = [
 ]
 # Enables `mio::net` module containing networking primitives.
 net = []
+
+wasmedge = []
 
 [dependencies]
 log = "0.4.8"
@@ -61,6 +63,7 @@ features = [
 [target.'cfg(target_os = "wasi")'.dependencies]
 wasi = "0.11.0"
 libc = "0.2.121"
+wasmedge_wasi_socket = {path = "../wasmedge_wasi_socket"}
 
 [dev-dependencies]
 env_logger = { version = "0.8.4", default-features = false }

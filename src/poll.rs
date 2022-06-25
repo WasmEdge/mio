@@ -643,7 +643,7 @@ impl Registry {
 
     /// Internal check to ensure only a single `Waker` is active per [`Poll`]
     /// instance.
-    #[cfg(all(debug_assertions, not(target_os = "wasi")))]
+    #[cfg(debug_assertions)]
     pub(crate) fn register_waker(&self) {
         assert!(
             !self.selector.register_waker(),
