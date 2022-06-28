@@ -142,6 +142,12 @@ impl TcpListener {
         return self.inner.local_addr();
     }
 
+    /// Returns the local socket address of this listener.
+    #[cfg(feature = "wasmedge")]
+    pub fn local_addr(&self) -> io::Result<SocketAddr> {
+        return self.inner.local_addr();
+    }
+
     /// Sets the value for the `IP_TTL` option on this socket.
     ///
     /// This value sets the time-to-live field that is used in every packet sent
