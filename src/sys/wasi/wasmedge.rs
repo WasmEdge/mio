@@ -88,11 +88,7 @@ impl Selector {
         events.reserve(length);
 
         debug_assert!(events.capacity() >= length);
-        // return when there is no subscriptions
-        // otherwise, poll will return an error.
-        if length == 0 {
-            return Ok(());
-        }
+
         let res = unsafe { wasi::poll(subscriptions.as_ptr(), events.as_mut_ptr(), length) };
 
         // Remove the timeout subscription we possibly added above.
@@ -120,6 +116,11 @@ impl Selector {
                 }
 
                 check_errors(&events)
+            }
+            Err(err) if err.kind() == io::ErrorKind::InvalidInput && length == 0 => {
+                // return Ok when there is no subscriptions
+                // otherwise, poll will return an error.
+                Ok(())
             }
             Err(err) => Err(err),
         }
