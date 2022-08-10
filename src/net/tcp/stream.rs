@@ -100,6 +100,7 @@ impl TcpStream {
     #[cfg(all(target_os = "wasi", feature = "wasmedge"))]
     pub fn connect(addr: SocketAddr) -> io::Result<TcpStream> {
         let inner = wasmedge_wasi_socket::TcpStream::connect(addr)?;
+        inner.set_nonblocking(true)?;
         Ok(TcpStream {
             inner: IoSource::new(inner),
         })
