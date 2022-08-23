@@ -1,6 +1,7 @@
+#![allow(dead_code)]
 use std::cmp::min;
 use std::io;
-#[cfg(all(feature = "net", debug_assertions))]
+#[cfg(feature = "net")]
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -11,19 +12,11 @@ use wasmedge_wasi_socket::wasi_poll as wasi;
 
 cfg_net! {
     pub mod tcp {
-        // use std::io;
-        // use std::net::{self, SocketAddr};
-
-        // pub fn accept(listener: &net::TcpListener) -> io::Result<(net::TcpStream, SocketAddr)> {
-        //     let (stream, addr) = listener.accept()?;
-        //     stream.set_nonblocking(true)?;
-        //     Ok((stream, addr))
-        // }
     }
 }
 
 /// Unique id for use as `SelectorId`.
-#[cfg(all(debug_assertions, feature = "net"))]
+#[cfg(feature = "net")]
 static NEXT_ID: AtomicUsize = AtomicUsize::new(1);
 
 mod waker {
@@ -45,7 +38,7 @@ mod waker {
 pub use waker::Waker;
 
 pub struct Selector {
-    #[cfg(all(debug_assertions, feature = "net"))]
+    #[cfg(feature = "net")]
     id: usize,
     /// Subscriptions (reads events) we're interested in.
     subscriptions: Arc<Mutex<Vec<wasi::Subscription>>>,
@@ -54,7 +47,7 @@ pub struct Selector {
 impl Selector {
     pub fn new() -> io::Result<Selector> {
         Ok(Selector {
-            #[cfg(all(debug_assertions, feature = "net"))]
+            #[cfg(feature = "net")]
             id: NEXT_ID.fetch_add(1, Ordering::Relaxed),
             subscriptions: Arc::new(Mutex::new(Vec::new())),
         })
@@ -67,7 +60,7 @@ impl Selector {
         })
     }
 
-    #[cfg(all(debug_assertions, feature = "net"))]
+    #[cfg(feature = "net")]
     pub fn id(&self) -> usize {
         self.id
     }
