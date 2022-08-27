@@ -63,7 +63,7 @@ features = [
 [target.'cfg(target_os = "wasi")'.dependencies]
 wasi = "0.11.0"
 libc = "0.2.121"
-wasmedge_wasi_socket = {git="https://github.com/MediosZ/wasmedge_wasi_socket.git", branch = "tcplistener", optional = true, features = ["wasi_poll"]}
+wasmedge_wasi_socket = {git="https://github.com/second-state/wasmedge_wasi_socket.git", optional = true, features = ["wasi_poll"]}
 
 [dev-dependencies]
 env_logger = { version = "0.8.4", default-features = false }
